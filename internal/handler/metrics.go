@@ -88,7 +88,6 @@ func Metrics(h http.Handler, routeMatcher RouteMatcher) http.Handler {
 		// These are not real errors - the client simply disconnected
 		if respMetrics.Code == http.StatusServiceUnavailable && r.Context().Err() == context.Canceled {
 			respMetrics.Code = 499
-			return
 		}
 
 		histogram := httpRequestDurationSeconds.WithLabelValues(route, strconv.Itoa(respMetrics.Code))
