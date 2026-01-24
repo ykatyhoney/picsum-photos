@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -30,8 +31,20 @@ func Logger(log *logger.Logger, h http.Handler) http.Handler {
 			"elapsed", fmt.Sprintf("%.9fs", respMetrics.Duration.Seconds()),
 		}
 
+		// Add context error information if present
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			logFields = append(logFields, "context-error", ctxErr.Error())
+		}
+
 		switch {
+		case respMetrics.Code == http.StatusServiceUnavailable && ctx.Err() == context.Canceled:
+			// Client disconnected - not an error, just informational
+			log.Infow("Request cancelled by client", logFields...)
+		case respMetrics.Code == http.StatusServiceUnavailable && ctx.Err() == context.DeadlineExceeded:
+			// Handler timeout - this is an error
+			log.Errorw("Request timeout", logFields...)
 		case respMetrics.Code >= 500:
+			// Other 5xx errors
 			log.Errorw("Request completed", logFields...)
 		default:
 			log.Debugw("Request completed", logFields...)

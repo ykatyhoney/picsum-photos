@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"expvar"
 	"net/http"
 	"strconv"
@@ -80,6 +81,13 @@ func Metrics(h http.Handler, routeMatcher RouteMatcher) http.Handler {
 			return
 		// Produced by http.ServeFile when serving the static assets for the website
 		case http.StatusPartialContent, http.StatusNotModified, http.StatusRequestedRangeNotSatisfiable:
+			return
+		}
+
+		// Count client disconnects as 499s in metrics, so that we can distuingish them
+		// These are not real errors - the client simply disconnected
+		if respMetrics.Code == http.StatusServiceUnavailable && r.Context().Err() == context.Canceled {
+			respMetrics.Code = 499
 			return
 		}
 
