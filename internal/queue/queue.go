@@ -29,7 +29,7 @@ type jobResult struct {
 func New(ctx context.Context, workers int, handler func(context.Context, interface{}) (interface{}, error)) *Queue {
 	queue := &Queue{
 		workers: workers,
-		queue:   make(chan job),
+		queue:   make(chan job, workers*2),
 		handler: handler,
 		ctx:     ctx,
 	}
@@ -59,21 +59,14 @@ func (q *Queue) worker() {
 				return
 			}
 
-			select {
-			// End early if the job context was cancelled
-			case <-job.context.Done():
-				job.result <- jobResult{
-					result: nil,
-					err:    job.context.Err(),
-				}
-			// Otherwise run the job
-			default:
-				result, err := q.handler(job.context, job.data)
-				job.result <- jobResult{
-					result: result,
-					err:    err,
-				}
+			// Check if the job context was cancelled before processing
+			if job.context.Err() != nil {
+				job.result <- jobResult{result: nil, err: job.context.Err()}
+				continue
 			}
+
+			result, err := q.handler(job.context, job.data)
+			job.result <- jobResult{result: result, err: err}
 
 		case <-q.ctx.Done():
 			return
@@ -87,20 +80,30 @@ func (q *Queue) Process(ctx context.Context, data interface{}) (interface{}, err
 		return nil, fmt.Errorf("queue has been shutdown")
 	}
 
-	resultChan := make(chan jobResult)
+	resultChan := make(chan jobResult, 1)
 
-	q.queue <- job{
+	select {
+	case q.queue <- job{
 		data:    data,
 		result:  resultChan,
 		context: ctx,
+	}:
+	case <-q.ctx.Done():
+		return nil, fmt.Errorf("queue has been shutdown")
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 
-	result := <-resultChan
-	close(resultChan)
+	select {
+	case result := <-resultChan:
+		if result.err != nil {
+			return nil, result.err
+		}
 
-	if result.err != nil {
-		return nil, result.err
+		return result.result, nil
+	case <-ctx.Done():
+		// Context cancelled - but worker may still be processing
+		// At least we can return early and not waste this goroutine
+		return nil, ctx.Err()
 	}
-
-	return result.result, nil
 }
