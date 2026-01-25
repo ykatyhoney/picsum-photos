@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -39,7 +41,9 @@ func (a *API) infoHandler(w http.ResponseWriter, r *http.Request) *handler.Error
 	w.Header().Set("Cache-Control", "private, no-cache, no-store, must-revalidate")
 
 	if err := json.NewEncoder(w).Encode(listImage); err != nil {
-		a.logError(r, "error encoding image info", err)
+		if !errors.Is(err, context.Canceled) {
+			a.logError(r, "error encoding image info", err)
+		}
 		return handler.InternalServerError()
 	}
 
@@ -62,7 +66,9 @@ func (a *API) infoSeedHandler(w http.ResponseWriter, r *http.Request) *handler.E
 	w.Header().Set("Cache-Control", "private, no-cache, no-store, must-revalidate")
 
 	if err := json.NewEncoder(w).Encode(listImage); err != nil {
-		a.logError(r, "error encoding image info", err)
+		if !errors.Is(err, context.Canceled) {
+			a.logError(r, "error encoding image info", err)
+		}
 		return handler.InternalServerError()
 	}
 
@@ -97,7 +103,9 @@ func (a *API) listHandler(w http.ResponseWriter, r *http.Request) *handler.Error
 	w.Header().Set("Link", a.getLinkHeader(page, limit, end))
 
 	if err := json.NewEncoder(w).Encode(list); err != nil {
-		a.logError(r, "error encoding image list", err)
+		if !errors.Is(err, context.Canceled) {
+			a.logError(r, "error encoding image list", err)
+		}
 		return handler.InternalServerError()
 	}
 
