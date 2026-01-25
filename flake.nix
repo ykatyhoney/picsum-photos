@@ -37,6 +37,7 @@
             subPackages = ["cmd/picsum-photos"];
             doCheck = false; # Prevent make test from being ran
             vendorHash = (pkgs.lib.fileContents ./go.mod.sri);
+            proxyVendor = true;
             nativeBuildInputs = with pkgs; [
               tailwindcss
             ];
@@ -51,6 +52,7 @@
             subPackages = ["cmd/image-service"];
             doCheck = false; # Prevent make test from being ran
             vendorHash = (pkgs.lib.fileContents ./go.mod.sri);
+            proxyVendor = true;
             nativeBuildInputs = with pkgs; [
               pkg-config
             ];
