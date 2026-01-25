@@ -2,9 +2,13 @@ package queue
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime"
 )
+
+// ErrQueueFull is returned when the queue buffer is full
+var ErrQueueFull = errors.New("queue is full")
 
 // Queue is a worker queue with a fixed amount of workers
 type Queue struct {
@@ -29,7 +33,7 @@ type jobResult struct {
 func New(ctx context.Context, workers int, handler func(context.Context, interface{}) (interface{}, error)) *Queue {
 	queue := &Queue{
 		workers: workers,
-		queue:   make(chan job, workers*4),
+		queue:   make(chan job, workers*8),
 		handler: handler,
 		ctx:     ctx,
 	}
@@ -92,6 +96,8 @@ func (q *Queue) Process(ctx context.Context, data interface{}) (interface{}, err
 		return nil, fmt.Errorf("queue has been shutdown")
 	case <-ctx.Done():
 		return nil, ctx.Err()
+	default:
+		return nil, ErrQueueFull
 	}
 
 	select {
