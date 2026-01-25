@@ -2,16 +2,23 @@ package imageapi
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/DMarby/picsum-photos/internal/handler"
 	"github.com/DMarby/picsum-photos/internal/hmac"
 	"github.com/DMarby/picsum-photos/internal/tracing"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/rs/cors"
 
 	"github.com/DMarby/picsum-photos/internal/image"
 	"github.com/DMarby/picsum-photos/internal/logger"
 	"github.com/gorilla/mux"
+)
+
+const (
+	imageCacheTTL      = 5 * time.Minute
+	imageCacheCapacity = 5000
 )
 
 // API is a http api
@@ -21,6 +28,20 @@ type API struct {
 	Tracer         *tracing.Tracer
 	HandlerTimeout time.Duration
 	HMAC           *hmac.HMAC
+	imageCache     *expirable.LRU[string, []byte] // caches processed images
+	inflight       sync.Map                       // map[string]chan struct{} - coalesces concurrent requests
+}
+
+// NewAPI creates a new API instance with initialized caches
+func NewAPI(imageProcessor image.Processor, log *logger.Logger, tracer *tracing.Tracer, handlerTimeout time.Duration, hmac *hmac.HMAC) *API {
+	return &API{
+		ImageProcessor: imageProcessor,
+		Log:            log,
+		Tracer:         tracer,
+		HandlerTimeout: handlerTimeout,
+		HMAC:           hmac,
+		imageCache:     expirable.NewLRU[string, []byte](imageCacheCapacity, nil, imageCacheTTL),
+	}
 }
 
 // Utility methods for logging

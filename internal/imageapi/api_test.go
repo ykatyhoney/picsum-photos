@@ -39,9 +39,9 @@ func TestAPI(t *testing.T) {
 
 	mockStorageImageProcessor, _ := vipsProcessor.New(ctx, log, tracer, 3, image.NewCache(tracer, memoryCache.New(), &mockStorage.Provider{}))
 
-	router := (&api.API{imageProcessor, log, tracer, time.Minute, hmac}).Router()
-	mockStorageRouter := (&api.API{mockStorageImageProcessor, log, tracer, time.Minute, hmac}).Router()
-	mockProcessorRouter := (&api.API{&mockProcessor.Processor{}, log, tracer, time.Minute, hmac}).Router()
+	router := api.NewAPI(imageProcessor, log, tracer, time.Minute, hmac).Router()
+	mockStorageRouter := api.NewAPI(mockStorageImageProcessor, log, tracer, time.Minute, hmac).Router()
+	mockProcessorRouter := api.NewAPI(&mockProcessor.Processor{}, log, tracer, time.Minute, hmac).Router()
 
 	tests := []struct {
 		Name             string
@@ -201,7 +201,7 @@ func TestFixtures(t *testing.T) {
 
 	log, tracer, imageProcessor, hmac := setup(t, ctx)
 
-	router := (&api.API{imageProcessor, log, tracer, time.Minute, hmac}).Router()
+	router := api.NewAPI(imageProcessor, log, tracer, time.Minute, hmac).Router()
 
 	// JPEG
 	createFixture(router, hmac, "/id/1/200/120.jpg", "width_height", "jpg")
