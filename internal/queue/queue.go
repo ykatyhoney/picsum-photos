@@ -33,7 +33,7 @@ type jobResult struct {
 func New(ctx context.Context, workers int, handler func(context.Context, interface{}) (interface{}, error)) *Queue {
 	queue := &Queue{
 		workers: workers,
-		queue:   make(chan job, workers*64),
+		queue:   make(chan job, workers*128),
 		handler: handler,
 		ctx:     ctx,
 	}

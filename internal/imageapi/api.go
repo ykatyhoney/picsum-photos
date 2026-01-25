@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	imageCacheTTL      = 5 * time.Minute
-	imageCacheCapacity = 75_000
+	imageCacheTTL      = 10 * time.Minute
+	imageCacheCapacity = 150_000
 )
 
 // API is a http api
