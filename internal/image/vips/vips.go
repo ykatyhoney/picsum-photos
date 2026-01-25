@@ -22,7 +22,6 @@ type Processor struct {
 }
 
 var (
-	queueSize       = expvar.NewInt("gauge_image_processor_queue_size")
 	processedImages = expvar.NewMap("counter_labelmap_dimensions_image_processor_processed_images")
 )
 
@@ -37,6 +36,13 @@ func New(ctx context.Context, log *logger.Logger, tracer *tracing.Tracer, worker
 	instance := &Processor{
 		queue:  workerQueue,
 		tracer: tracer,
+	}
+
+	// Publish queue size metric (only if not already registered)
+	if expvar.Get("gauge_image_processor_queue_size") == nil {
+		expvar.Publish("gauge_image_processor_queue_size", expvar.Func(func() any {
+			return workerQueue.Len()
+		}))
 	}
 
 	go workerQueue.Run()
@@ -55,9 +61,6 @@ func (p *Processor) ProcessImage(ctx context.Context, task *image.Task) (process
 		trace.WithAttributes(attribute.Int("format", int(task.OutputFormat))),
 	)
 	defer span.End()
-
-	queueSize.Add(1)
-	defer queueSize.Add(-1)
 
 	result, err := p.queue.Process(ctx, task)
 	if err != nil {

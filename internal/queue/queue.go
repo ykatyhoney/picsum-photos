@@ -33,7 +33,7 @@ type jobResult struct {
 func New(ctx context.Context, workers int, handler func(context.Context, interface{}) (interface{}, error)) *Queue {
 	queue := &Queue{
 		workers: workers,
-		queue:   make(chan job, workers*16),
+		queue:   make(chan job, workers*64),
 		handler: handler,
 		ctx:     ctx,
 	}
@@ -76,6 +76,11 @@ func (q *Queue) worker() {
 			return
 		}
 	}
+}
+
+// Len returns the current number of jobs waiting in the queue buffer
+func (q *Queue) Len() int {
+	return len(q.queue)
 }
 
 // Process adds a job to the queue, waits for it to process, and returns the result

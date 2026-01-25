@@ -37,10 +37,12 @@ type API struct {
 func NewAPI(imageProcessor image.Processor, log *logger.Logger, tracer *tracing.Tracer, handlerTimeout time.Duration, hmac *hmac.HMAC) *API {
 	cache := expirable.NewLRU[string, []byte](imageCacheCapacity, nil, imageCacheTTL)
 
-	// Publish cache size gauge metric
-	expvar.Publish("gauge_imageapi_cache_size", expvar.Func(func() any {
-		return cache.Len()
-	}))
+	// Publish cache size gauge metric (only if not already registered)
+	if expvar.Get("gauge_imageapi_cache_size") == nil {
+		expvar.Publish("gauge_imageapi_cache_size", expvar.Func(func() any {
+			return cache.Len()
+		}))
+	}
 
 	return &API{
 		ImageProcessor: imageProcessor,

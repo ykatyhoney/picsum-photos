@@ -66,7 +66,9 @@ func (t *Tracer) Shutdown(ctx context.Context) {
 }
 
 func TraceInfo(ctx context.Context) (string, string) {
-	traceID := trace.SpanContextFromContext(ctx).TraceID().String()
-	spanID := trace.SpanContextFromContext(ctx).SpanID().String()
-	return traceID, spanID
+	spanCtx := trace.SpanContextFromContext(ctx)
+	if !spanCtx.IsValid() {
+		return "", ""
+	}
+	return spanCtx.TraceID().String(), spanCtx.SpanID().String()
 }

@@ -21,14 +21,16 @@ func Logger(log *logger.Logger, h http.Handler) http.Handler {
 		traceID, spanID := tracing.TraceInfo(ctx)
 
 		logFields := []interface{}{
-			"trace-id", traceID,
-			"span-id", spanID,
 			"http-method", r.Method,
 			"remote-addr", r.RemoteAddr,
 			"user-agent", r.UserAgent(),
 			"uri", r.URL.String(),
 			"status-code", respMetrics.Code,
 			"elapsed", fmt.Sprintf("%.9fs", respMetrics.Duration.Seconds()),
+		}
+
+		if traceID != "" {
+			logFields = append(logFields, "trace-id", traceID, "span-id", spanID)
 		}
 
 		// Add context error information if present
@@ -57,8 +59,11 @@ func LogFields(r *http.Request, keysAndValues ...interface{}) []interface{} {
 	ctx := r.Context()
 	traceID, spanID := tracing.TraceInfo(ctx)
 
-	return append([]interface{}{
-		"trace-id", traceID,
-		"span-id", spanID,
-	}, keysAndValues...)
+	if traceID != "" {
+		return append([]interface{}{
+			"trace-id", traceID,
+			"span-id", spanID,
+		}, keysAndValues...)
+	}
+	return keysAndValues
 }

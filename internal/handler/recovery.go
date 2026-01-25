@@ -16,11 +16,11 @@ func Recovery(log *logger.Logger, next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				ctx := r.Context()
 				traceID, spanID := tracing.TraceInfo(ctx)
-				log.Errorw("panic handling request",
-					"trace-id", traceID,
-					"span-id", spanID,
-					"stacktrace", string(debug.Stack()),
-				)
+				logFields := []interface{}{"stacktrace", string(debug.Stack())}
+				if traceID != "" {
+					logFields = append(logFields, "trace-id", traceID, "span-id", spanID)
+				}
+				log.Errorw("panic handling request", logFields...)
 			}
 		}()
 

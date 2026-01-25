@@ -20,6 +20,7 @@ var (
 	cacheMisses       = expvar.NewInt("counter_imageapi_cache_misses")
 	requestsCoalesced = expvar.NewInt("counter_imageapi_requests_coalesced")
 	requestsProcessed = expvar.NewInt("counter_imageapi_requests_processed")
+	queueFullErrors   = expvar.NewInt("counter_imageapi_queue_full_errors")
 )
 
 func (a *API) imageHandler(w http.ResponseWriter, r *http.Request) *handler.Error {
@@ -104,6 +105,8 @@ func (a *API) imageHandler(w http.ResponseWriter, r *http.Request) *handler.Erro
 
 	if err != nil {
 		if errors.Is(err, queue.ErrQueueFull) {
+			queueFullErrors.Add(1)
+			a.logError(r, "error processing image: queue is full", err)
 			return handler.ServiceUnavailable()
 		}
 		a.logError(r, "error processing image", err)
