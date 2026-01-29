@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/DMarby/picsum-photos/internal/cache/memory"
@@ -30,7 +31,7 @@ import (
 // Comandline flags
 var (
 	// Global
-	listen        = flag.String("listen", "", "unix socket path")
+	listen        = flag.String("listen", "", "listen address (tcp host:port or unix socket path)")
 	metricsListen = flag.String("metrics-listen", "127.0.0.1:8083", "metrics listen address")
 	loglevel      = zap.LevelFlag("log-level", zap.InfoLevel, "log level (default \"info\") (debug, info, warn, error, dpanic, panic, fatal)")
 
@@ -108,16 +109,27 @@ func main() {
 		Handler:      api.Router(),
 		ReadTimeout:  cmd.ReadTimeout,
 		WriteTimeout: cmd.WriteTimeout,
+		IdleTimeout:  cmd.IdleTimeout,
 		ErrorLog:     logger.NewHTTPErrorLog(log),
 	}
 
-	os.Remove(*listen)
-	unixListener, err := net.Listen("unix", *listen)
+	// Determine network type: TCP if address contains ":", otherwise Unix socket
+	network := "unix"
+	if strings.Contains(*listen, ":") {
+		network = "tcp"
+	} else {
+		os.Remove(*listen)
+	}
+
+	// Use ListenConfig to pass context for cancellation support
+	// Socket backlog is controlled by the kernel's net.core.somaxconn
+	lc := net.ListenConfig{}
+	listener, err := lc.Listen(ctx, network, *listen)
 	if err != nil {
-		log.Fatalf("error creating unix socket listener: %s", err.Error())
+		log.Fatalf("error creating %s listener: %s", network, err.Error())
 	}
 	go func() {
-		if err := server.Serve(unixListener); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			log.Errorf("error shutting down the http server: %s", err)
 		}
 	}()
