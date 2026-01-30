@@ -17,6 +17,8 @@
 
   <link rel="dns-prefetch" href="//fonts.googleapis.com">
   <link rel="dns-prefetch" href="//www.google-analytics.com">
+  <link rel="dns-prefetch" href="//www.googletagmanager.com">
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 
   <link rel="canonical" href="https://picsum.photos">
 
@@ -26,14 +28,39 @@
   <link href="//fonts.googleapis.com/css?family=Roboto:600|Work+Sans:600|Open+Sans:300,400" rel="stylesheet">
 
   <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.css">
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-T978ZC858K"></script>
+  <!-- GA4 with Consent Mode v2 -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
 
-    gtag('config', 'G-T978ZC858K');
+    // Set consent defaults before any Google tags load
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied'
+    });
+
+    var ga4Loaded = false;
+    function loadGA4() {
+      if (ga4Loaded) return;
+      ga4Loaded = true;
+      var script = document.createElement('script');
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=G-T978ZC858K';
+      script.async = true;
+      document.head.appendChild(script);
+      gtag('js', new Date());
+      gtag('config', 'G-T978ZC858K');
+    }
+
+    function updateGtagConsent() {
+      var granted = CookieConsent.acceptedCategory('analytics') ? 'granted' : 'denied';
+      gtag('consent', 'update', {
+        'analytics_storage': granted
+      });
+    }
   </script>
 </head>
 <body>
@@ -45,7 +72,7 @@
         <h2 class="text-2xl">The Lorem Ipsum for photos.</h2>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0" style="height: 354px;">
-        <img class="resize" src="/536/354">
+        <img class="resize" src="https://picsum.photos/536/354">
       </div>
     </div>
   </header>
@@ -73,7 +100,7 @@
         <p>You can find a list of all the images <a class="no-underline" href="/images">here.</a></p>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0">
-        <img class="resize" src="/id/237/536/354">
+        <img class="resize" src="https://picsum.photos/id/237/536/354">
       </div>
     </div>
   </div>
@@ -86,7 +113,7 @@
         <pre><code class="break-words"><a class="no-underline" href="/seed/picsum/200/300">https://picsum.photos/seed/picsum/200/300</a></code></pre>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0">
-        <img class="resize" src="/seed/picsum/536/354">
+        <img class="resize" src="https://picsum.photos/seed/picsum/536/354">
       </div>
     </div>
   </div>
@@ -99,7 +126,7 @@
         <pre><code class="break-words"><a class="no-underline" href="/200/300?grayscale">https://picsum.photos/200/300?grayscale</a></code></pre>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0">
-        <img class="resize" src="/id/1084/536/354?grayscale">
+        <img class="resize" src="https://picsum.photos/id/1084/536/354?grayscale">
       </div>
     </div>
   </div>
@@ -114,7 +141,7 @@
         <pre><code class="break-words"><a class="no-underline" href="/200/300/?blur=2">https://picsum.photos/200/300/?blur=2</a></code></pre>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0">
-        <img class="resize" src="/id/1060/536/354?blur=2">
+        <img class="resize" src="https://picsum.photos/id/1060/536/354?blur=2">
       </div>
     </div>
   </div>
@@ -135,7 +162,7 @@
         <pre><code class="break-words"><a class="no-underline" href="/200/300.webp">https://picsum.photos/200/300.webp</a></code></pre>
       </div>
       <div class="md:w-full px-4 pt-4 lg:w-1/2 lg:px-8 lg:pt-0">
-        <img class="resize" src="/id/870/536/354?grayscale&blur=2">
+        <img class="resize" src="https://picsum.photos/id/870/536/354?grayscale&blur=2">
       </div>
     </div>
   </div>
@@ -202,8 +229,98 @@
         <p class="leading-loose"><a class="no-underline" href="https://github.com/DMarby/picsum-photos">Source</a></p>
         <p class="leading-loose">Having trouble? Send us an <a class="no-underline" href="mailto:david@dmarby.se">email</a></p>
         <p class="leading-loose">Images from <a class="no-underline" href="https://unsplash.com">Unsplash</a></p>
+        <p class="leading-loose"><a class="no-underline" href="javascript:void(0)" onclick="CookieConsent.showPreferences()">Cookie Preferences</a></p>
       </div>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.umd.js"></script>
+  <script>
+    CookieConsent.run({
+      cookie: {
+        useLocalStorage: true
+      },
+      categories: {
+        analytics: {
+          services: {
+            ga4: {
+              label: 'Google Analytics 4',
+              cookies: [
+                { name: /^_ga/ },
+                { name: '_gid' }
+              ]
+            }
+          }
+        }
+      },
+      language: {
+        default: 'en',
+        translations: {
+          en: {
+            consentModal: {
+              title: 'We use cookies',
+              description: 'We use cookies to analyze site traffic and improve your experience.',
+              acceptAllBtn: 'Accept',
+              acceptNecessaryBtn: 'Reject',
+              showPreferencesBtn: 'Manage preferences'
+            },
+            preferencesModal: {
+              title: 'Cookie preferences',
+              acceptAllBtn: 'Accept',
+              acceptNecessaryBtn: 'Reject',
+              savePreferencesBtn: 'Save preferences',
+              sections: [
+                {
+                  title: 'Analytics cookies',
+                  description: 'These cookies help us understand how visitors interact with the website.',
+                  linkedCategory: 'analytics',
+                  cookieTable: {
+                    headers: {
+                      name: 'Name',
+                      domain: 'Service',
+                      description: 'Description',
+                      expiration: 'Expiration'
+                    },
+                    body: [
+                      {
+                        name: '_ga',
+                        domain: 'Google Analytics',
+                        description: 'Used to distinguish users',
+                        expiration: '2 years'
+                      },
+                      {
+                        name: '_gid',
+                        domain: 'Google Analytics',
+                        description: 'Used to distinguish users',
+                        expiration: '24 hours'
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      onFirstConsent: function() {
+        updateGtagConsent();
+        if (CookieConsent.acceptedCategory('analytics')) {
+          loadGA4();
+        }
+      },
+      onConsent: function() {
+        updateGtagConsent();
+        if (CookieConsent.acceptedCategory('analytics')) {
+          loadGA4();
+        }
+      },
+      onChange: function() {
+        updateGtagConsent();
+        if (CookieConsent.acceptedCategory('analytics')) {
+          loadGA4();
+        }
+      }
+    });
+  </script>
 </body>
 </html>
