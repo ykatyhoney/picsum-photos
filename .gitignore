@@ -2,6 +2,7 @@
 **/debug.test
 
 /picsum-photos
+/tmp
 
 /image-service
 
@@ -12,3 +13,5 @@
 
 .direnv
 result
+
+internal/web/embed/assets/css/style.css

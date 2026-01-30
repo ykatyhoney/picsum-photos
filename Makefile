@@ -39,3 +39,8 @@ upgrade:
 upgradetools:
 	cd tools && $(GO) list -e -f '{{range .Imports}}{{.}}@latest {{end}}' -tags tools | xargs $(GO) get
 	cd tools && $(GO) mod tidy -v
+
+.PHONY: run
+run:
+	@(sleep 3 && open http://localhost:8090) &
+	$(GOTOOLRUN) github.com/air-verse/air
